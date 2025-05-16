@@ -60,5 +60,7 @@ echo "Moving files to /usr/local/bin..."
 mv $START_AUDIO_FILE $INSTALL_DIR/
 mv $START_VIDEO_FILE $INSTALL_DIR/
 
+chmod +x /usr/local/bin/*.bash
+
 # Script complete
 echo "Installation complete."
