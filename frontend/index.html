@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OpenGate</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        /* Ensure html and body take full height */
+        height: 100%;
+        margin: 0;
+      }
+
+      body {
+        background: #0d1117;
+        color: #ffffff;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        display: flex;
+        flex-direction: column; /* Arrange children vertically */
+        align-items: center;
+        padding: 20px;
+      }
+
+      h1 {
+        margin-bottom: 20px;
+        font-size: 2em;
+        font-weight: 600;
+        text-align: center; /* Center title */
+      }
+
+      .video-container {
+        display: flex;
+        gap: 20px;
+        justify-content: center;
+        flex-wrap: wrap; /* Allow videos to wrap on smaller screens */
+        width: 100%; /* Make video container take full width */
+        max-width: 1300px; /* Max width for larger screens */
+        margin-bottom: 20px;
+      }
+
+      .video-frame {
+        background: #1c1c1e;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        width: 100%; /* Make video frames responsive */
+        max-width: 640px; /* Max width per video */
+        height: auto; /* Adjust height automatically */
+        aspect-ratio: 4 / 3; /* Maintain aspect ratio for video frames */
+        display: flex;
+        flex-direction: column;
+      }
+
+      iframe {
+        border: none;
+        flex-grow: 1; /* Allow iframe to fill available space */
+        width: 100%;
+        height: 100%;
+      }
+
+      .label {
+        text-align: center;
+        padding: 10px 0;
+        font-size: 1em;
+        font-weight: bold;
+        color: #eee;
+        background-color: #161b22;
+        border-top: 1px solid #2c2f36;
+      }
+
+      .action-buttons-wrapper {
+        margin-top: auto; /* Pushes the button container to the bottom */
+        padding: 20px;
+        width: 100%;
+        display: flex;
+        flex-direction: column; /* Stack buttons vertically on small screens */
+        align-items: center; /* Center buttons */
+        gap: 10px; /* Space between buttons */
+      }
+
+      /* Shared button styles */
+      .action-button {
+        color: white;
+        border: none;
+        padding: 12px 24px; /* Slightly larger padding */
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 16px;
+        font-weight: bold;
+        border-radius: 8px; /* More rounded corners */
+        cursor: pointer;
+        transition:
+          background-color 0.3s ease,
+          transform 0.1s ease;
+        min-width: 220px; /* Minimum width for buttons */
+      }
+
+      .action-button:hover {
+        opacity: 0.9;
+      }
+
+      .action-button:active {
+        transform: scale(0.98); /* Slight press effect */
+      }
+
+      #ntfyButton {
+        background-color: #28a745; /* Green background */
+      }
+
+      #ntfyButton:hover {
+        background-color: #218838; /* Darker green on hover */
+      }
+
+      #telegramButton {
+        background-color: #007bff; /* Blue background */
+      }
+
+      #telegramButton:hover {
+        background-color: #0056b3; /* Darker blue on hover */
+      }
+
+      /* Message area for notifications */
+      #messageArea {
+        margin-top: 15px;
+        padding: 10px;
+        border-radius: 5px;
+        text-align: center;
+        min-height: 40px; /* Reserve space */
+        width: 100%;
+        max-width: 600px;
+        font-weight: bold;
+      }
+      .message-success {
+        background-color: #28a745;
+        color: white;
+      }
+      .message-error {
+        background-color: #dc3545;
+        color: white;
+      }
+
+      /* Responsive adjustments */
+      @media (min-width: 768px) {
+        .action-buttons-wrapper {
+          flex-direction: row; /* Place buttons side-by-side on larger screens */
+          justify-content: center; /* Center buttons horizontally */
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <h1>🔔 OpenGate: Doorbell Camera</h1>
+    <div class="video-container">
+      <div class="video-frame">
+        <iframe
+          <!-- src="http://192.168.1.114:8888/videostream" -->
+          src="http://camera.katulevskiy.com/live_cam/"
+          allow="camera; microphone; autoplay"
+          allowfullscreen
+          title="Original Instant Stream"
+        ></iframe>
+        <div class="label">Original (Instant Stream)</div>
+      </div>
+      <div class="video-frame">
+        <iframe
+          <!-- src="http://192.168.1.21:9000/detection" -->
+          src="http://camera.katulevskiy.com/live_detection/"
+          allowfullscreen
+          title="Detection YOLOv11 Stream"
+        ></iframe>
+        <div class="label">Detection (YOLOv11)</div>
+      </div>
+    </div>
+
+    <div id="messageArea"></div>
+
+    <div class="action-buttons-wrapper">
+      <button id="ntfyButton" class="action-button">
+        Send Notification (ntfy)
+      </button>
+      <button id="telegramButton" class="action-button">
+        Send Telegram Message
+      </button>
+    </div>
+
+    <script>
+      // Get the message area element
+      const messageArea = document.getElementById("messageArea");
+
+      // Function to display messages
+      function showMessage(message, type) {
+        messageArea.textContent = message;
+        messageArea.className = "message-" + type; // e.g., message-success or message-error
+        // Clear message after 3 seconds
+        setTimeout(() => {
+          messageArea.textContent = "";
+          messageArea.className = "";
+        }, 3000);
+      }
+
+      // Event listener for the ntfy.sh notification button
+      document
+        .getElementById("ntfyButton")
+        .addEventListener("click", function () {
+          fetch("https://ntfy.sh/open_gate_notif", {
+            method: "POST",
+            body: "Notif successful 😀",
+          })
+            .then((response) => {
+              if (response.ok) {
+                showMessage("Ntfy notification sent successfully!", "success");
+                console.log("Ntfy notification sent successfully!");
+              } else {
+                showMessage(
+                  "Failed to send ntfy notification. Status: " +
+                    response.status,
+                  "error",
+                );
+                console.error(
+                  "Failed to send ntfy notification. Status:",
+                  response.status,
+                );
+              }
+            })
+            .catch((error) => {
+              showMessage(
+                "Error sending ntfy notification. Check console.",
+                "error",
+              );
+              console.error("Error sending ntfy notification:", error);
+            });
+        });
+
+      // Event listener for the Telegram notification button
+      document
+        .getElementById("telegramButton")
+        .addEventListener("click", function () {
+          // The webhook URL for Telegram
+          const telegramWebhookUrl =
+            "http://localhost:5678/webhook/2aea4060-7603-4974-9a61-5584a137a895";
+          fetch(telegramWebhookUrl, {
+            method: "GET", // As specified, a GET request
+          })
+            .then((response) => {
+              if (response.ok) {
+                showMessage("Telegram message sent successfully!", "success");
+                console.log("Telegram message sent successfully!");
+              } else {
+                showMessage(
+                  "Failed to send Telegram message. Status: " + response.status,
+                  "error",
+                );
+                console.error(
+                  "Failed to send Telegram message. Status:",
+                  response.status,
+                );
+              }
+            })
+            .catch((error) => {
+              // Network errors or other issues with the fetch call itself
+              // This is especially relevant for localhost URLs if the local server isn't running
+              showMessage(
+                "Error sending Telegram message. Is the local server running? Check console.",
+                "error",
+              );
+              console.error("Error sending Telegram message:", error);
+            });
+        });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,26 @@
+logLevel: info
+
+rtsp: yes
+rtspAddress: :8554
+rtspTransports: [udp, tcp]
+rtmp: no
+srt: no
+
+hls: yes
+hlsAddress: :8888
+hlsVariant: lowLatency
+hlsSegmentDuration: 1s
+hlsPartDuration: 200ms
+hlsAllowOrigin: "*"
+
+webrtc: yes
+webrtcAddress: :8889
+webrtcEncryption: no
+webrtcLocalUDPAddress: :8189
+webrtcAllowOrigin: "*"
+
+paths:
+  cam:
+    source: udp://0.0.0.0:9000
+    sourceProtocol: udp
+    sourceOnDemand: yes
