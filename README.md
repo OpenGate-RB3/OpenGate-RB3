@@ -16,7 +16,7 @@ If at some point you need to figure out active RB3 ip addr, use `hostname -i | a
 
 ## STREAMING VIDEO AND AUDIO FROM THE BOARD
 
-To start all the streams, download the RUN.bash script onto the board with `wget <RAW LINK HERE>` and run it with `./RUN.bash`
+To start all the streams, download the RUN.bash script onto the board with `wget https://raw.githubusercontent.com/OpenGate-RB3/OpenGate-RB3/refs/heads/main/RUN.bash` and run it with `./RUN.bash`
 
 If you want to start an individual stream, here are commands you can use:
 
@@ -78,7 +78,7 @@ cd self-hosted-ai-starter-kit
 2. Get our custom docker-compose that combines n8n with ollama and open-webui
 
 ```bash
-wget <RAW GH LINK>
+wget https://raw.githubusercontent.com/OpenGate-RB3/OpenGate-RB3/refs/heads/main/n8n/docker-compose-v2.yml
 docker-compose -f docker-compose-v2.yml --profile gpu-nvidia up -d --remove-orphans
 ```
 
