@@ -1,2 +1,15 @@
 # OpenGate-RB3
-Main repository, explanations for setup and use. 
+
+## SETUP
+
+wget
+
+## STREAMING VIDEO
+
+## STREAMING AUDIO
+
+## YOLO OBJECT DETECTION
+
+## FACE RECOGNITION
+
+## N8N AUTOMATIONS
