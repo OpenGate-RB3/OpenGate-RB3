@@ -1,26 +1,275 @@
-logLevel: info
+logLevel: debug
+logDestinations: [stdout]
+logFile: mediamtx.log
+sysLogPrefix: mediamtx
+
+readTimeout: 100s
+writeTimeout: 100s
+writeQueueSize: 512
+udpMaxPayloadSize: 1472
+
+authMethod: internal
+
+authInternalUsers:
+  - user: any
+    pass:
+    ips: []
+    permissions:
+      - action: publish
+        path:
+      - action: read
+        path:
+      - action: playback
+        path:
+
+  - user: any
+    pass:
+    ips: ["127.0.0.1", "::1"]
+    permissions:
+      - action: api
+      - action: metrics
+      - action: pprof
+
+pprof: no
+pprofAddress: :9999
+pprofEncryption: no
+pprofServerKey: server.key
+pprofServerCert: server.crt
+pprofAllowOrigin: "*"
+pprofTrustedProxies: []
+
+playback: no
+playbackAddress: :9996
+playbackEncryption: no
+playbackServerKey: server.key
+playbackServerCert: server.crt
+playbackAllowOrigin: "*"
+playbackTrustedProxies: []
 
 rtsp: yes
+rtspTransports: [udp, multicast, tcp]
+rtspEncryption: "no"
 rtspAddress: :8554
-rtspTransports: [udp, tcp]
-rtmp: no
-srt: no
+rtpAddress: :8000
+rtcpAddress: :8001
+multicastIPRange: 224.1.0.0/16
+multicastRTPPort: 8002
+multicastRTCPPort: 8003
+rtspAuthMethods: [basic]
+
+rtmp: yes
+rtmpAddress: :1935
+rtmpEncryption: "no"
 
 hls: yes
 hlsAddress: :8888
+hlsEncryption: no
+hlsAllowOrigin: "*"
+hlsTrustedProxies: []
+hlsAlwaysRemux: no
 hlsVariant: lowLatency
+hlsSegmentCount: 7
 hlsSegmentDuration: 1s
 hlsPartDuration: 200ms
-hlsAllowOrigin: "*"
+hlsSegmentMaxSize: 50M
+hlsDirectory: ""
+hlsMuxerCloseAfter: 60s
 
 webrtc: yes
 webrtcAddress: :8889
 webrtcEncryption: no
-webrtcLocalUDPAddress: :8189
 webrtcAllowOrigin: "*"
+webrtcTrustedProxies: []
+webrtcLocalUDPAddress: :8189
+webrtcLocalTCPAddress: ""
+webrtcIPsFromInterfaces: yes
+webrtcIPsFromInterfacesList: []
+webrtcAdditionalHosts: []
+webrtcICEServers2: []
+webrtcHandshakeTimeout: 10s
+webrtcTrackGatherTimeout: 2s
+webrtcSTUNGatherTimeout: 5s
 
+pathDefaults:
+  source: publisher
+  sourceFingerprint:
+  sourceOnDemand: no
+  sourceOnDemandStartTimeout: 10s
+  sourceOnDemandCloseAfter: 10s
+  maxReaders: 0
+  srtReadPassphrase:
+  fallback:
+  useAbsoluteTimestamp: false
+
+  record: no
+  recordPath: ./recordings/%path/%Y-%m-%d_%H-%M-%S-%f
+  recordFormat: fmp4
+  recordPartDuration: 1s
+  recordSegmentDuration: 1h
+  recordDeleteAfter: 1d
+
+  overridePublisher: yes
+  srtPublishPassphrase:
+
+  rtspTransport: automatic
+  rtspAnyPort: no
+  rtspRangeType:
+  rtspRangeStart:
+
+  sourceRedirect:
+
+  rpiCameraCamID: 0
+  rpiCameraSecondary: false
+  rpiCameraWidth: 1920
+  rpiCameraHeight: 1080
+  rpiCameraHFlip: false
+  rpiCameraVFlip: false
+  rpiCameraBrightness: 0
+  rpiCameraContrast: 1
+  rpiCameraSaturation: 1
+  rpiCameraSharpness: 1
+  rpiCameraExposure: normal
+  rpiCameraAWB: auto
+  rpiCameraAWBGains: [0, 0]
+  rpiCameraDenoise: "off"
+  rpiCameraShutter: 0
+  rpiCameraMetering: centre
+  rpiCameraGain: 0
+  rpiCameraEV: 0
+  rpiCameraROI:
+  rpiCameraHDR: false
+  rpiCameraTuningFile:
+  rpiCameraMode:
+  rpiCameraFPS: 30
+  rpiCameraAfMode: continuous
+  rpiCameraAfRange: normal
+  rpiCameraAfSpeed: normal
+  rpiCameraLensPosition: 0.0
+  rpiCameraAfWindow:
+  rpiCameraFlickerPeriod: 0
+  rpiCameraTextOverlayEnable: false
+  rpiCameraTextOverlay: "%Y-%m-%d %H:%M:%S - MediaMTX"
+  # Codec. Available values: auto, hardwareH264, softwareH264, mjpeg.
+  rpiCameraCodec: auto
+  # Period between H264 IDR frames.
+  rpiCameraIDRPeriod: 60
+  # H264 Bitrate.
+  rpiCameraBitrate: 5000000
+  # H264 profile.
+  rpiCameraProfile: main
+  # H264 level.
+  rpiCameraLevel: "4.1"
+  # JPEG quality.
+  rpiCameraJPEGQuality: 60
+
+  runOnInit:
+  # Restart the command if it exits.
+  runOnInitRestart: no
+
+  # Command to run when this path is requested by a reader
+  # and no one is publishing to this path yet.
+  # This can be used to publish a stream on demand.
+  # This is terminated with SIGINT when there are no readers anymore.
+  # The following environment variables are available:
+  # * MTX_PATH: path name
+  # * MTX_QUERY: query parameters (passed by first reader)
+  # * RTSP_PORT: RTSP server port
+  # * G1, G2, ...: regular expression groups, if path name is
+  #   a regular expression.
+  runOnDemand:
+  # Restart the command if it exits.
+  runOnDemandRestart: no
+  # Readers will be put on hold until the runOnDemand command starts publishing
+  # or until this amount of time has passed.
+  runOnDemandStartTimeout: 10s
+  # The command will be closed when there are no
+  # readers connected and this amount of time has passed.
+  runOnDemandCloseAfter: 10s
+  # Command to run when there are no readers anymore.
+  # Environment variables are the same of runOnDemand.
+  runOnUnDemand:
+
+  # Command to run when the stream is ready to be read, whenever it is
+  # published by a client or pulled from a server / camera.
+  # This is terminated with SIGINT when the stream is not ready anymore.
+  # The following environment variables are available:
+  # * MTX_PATH: path name
+  # * MTX_QUERY: query parameters (passed by publisher)
+  # * MTX_SOURCE_TYPE: source type
+  # * MTX_SOURCE_ID: source ID
+  # * RTSP_PORT: RTSP server port
+  # * G1, G2, ...: regular expression groups, if path name is
+  #   a regular expression.
+  runOnReady:
+  # Restart the command if it exits.
+  runOnReadyRestart: no
+  # Command to run when the stream is not available anymore.
+  # Environment variables are the same of runOnReady.
+  runOnNotReady:
+
+  # Command to run when a client starts reading.
+  # This is terminated with SIGINT when a client stops reading.
+  # The following environment variables are available:
+  # * MTX_PATH: path name
+  # * MTX_QUERY: query parameters (passed by reader)
+  # * MTX_READER_TYPE: reader type
+  # * MTX_READER_ID: reader ID
+  # * RTSP_PORT: RTSP server port
+  # * G1, G2, ...: regular expression groups, if path name is
+  #   a regular expression.
+  runOnRead:
+  # Restart the command if it exits.
+  runOnReadRestart: no
+  # Command to run when a client stops reading.
+  # Environment variables are the same of runOnRead.
+  runOnUnread:
+
+  # Command to run when a recording segment is created.
+  # The following environment variables are available:
+  # * MTX_PATH: path name
+  # * MTX_SEGMENT_PATH: segment file path
+  # * RTSP_PORT: RTSP server port
+  # * G1, G2, ...: regular expression groups, if path name is
+  #   a regular expression.
+  runOnRecordSegmentCreate:
+
+  # Command to run when a recording segment is complete.
+  # The following environment variables are available:
+  # * MTX_PATH: path name
+  # * MTX_SEGMENT_PATH: segment file path
+  # * MTX_SEGMENT_DURATION: segment duration
+  # * RTSP_PORT: RTSP server port
+  # * G1, G2, ...: regular expression groups, if path name is
+  #   a regular expression.
+  runOnRecordSegmentComplete:
+
+###############################################
+# Path settings
+
+# Settings in "paths" are applied to specific paths, and the map key
+# is the name of the path.
+# Any setting in "pathDefaults" can be overridden here.
+# It's possible to use regular expressions by using a tilde as prefix,
+# for example "~^(test1|test2)$" will match both "test1" and "test2",
+# for example "~^prefix" will match all paths that start with "prefix".
 paths:
-  cam:
+  # example:
+  # my_camera:
+  #   source: rtsp://my_camera
+  videostream:
+    source: udp://0.0.0.0:5004
+    sourceProtocol: udp
+  audiostream:
+    source: udp://0.0.0.0:5005
+    sourceProtocol: udp
+  imagestream:
+    source: udp://0.0.0.0:5006
+    sourceProtocol: udp
+  audioinput:
     source: udp://0.0.0.0:9000
     sourceProtocol: udp
-    sourceOnDemand: yes
+    runOnReady: >
+      gst-launch-1.0 rtspsrc location=rtsp://localhost:8554/audioinput latency=50 ! rtpmpadepay ! mpegaudioparse ! mpg123audiodec ! pulsesink
+  # Settings under path "all_others" are applied to all paths that
+  # do not match another entry.
+  all_others:
