@@ -14,6 +14,14 @@ INSTALL script downloads and unpacks correct version of mediamtx multiplexer ont
 
 ## STREAMING VIDEO AND AUDIO FROM THE BOARD
 
+To start all the streams, download the RUN.bash script onto the board with `wget <RAW LINK HERE>` and run it with `./RUN.bash`
+
+If you want to start an individual stream, here are commands you can use:
+
+1. 30 FPS Camera Stream: `something`
+2. 5 FPS Camera Stream (for AI): `something`
+3. Audio stream: `gst-launch-1.0 -v pulsesrc volume=2.0 ! audioconvert ! audioresample ! lamemp3enc bitrate=128 cbr=true ! mpegaudioparse ! mpegtsmux ! udpsink host=${IPHOSTNAME} port=5005`
+
 ## STREAMING AUDIO TO BOARD SPEAKERS
 
 ## YOLO OBJECT DETECTION
