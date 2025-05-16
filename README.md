@@ -56,6 +56,7 @@ With correct setup, it should play audio live without delay, in good quality.
 
 ## GPIO (RING BUTTON PUSH NOTIFICATION)
 
+- Connect a button to ground (pin 1 or 2), and GPIO pin (23 in default case)
 - scp Dockerfile and monitor_button.py from ./gpio/ into any directory on RB3
 - Run the gpio button monitoring
 
