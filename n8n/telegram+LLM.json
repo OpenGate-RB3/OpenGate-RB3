@@ -1,0 +1,162 @@
+{
+  "name": "opengate",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "2aea4060-7603-4974-9a61-5584a137a895",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "46b18bf3-7cd0-4345-b1b1-86709f8ef9f5",
+      "name": "Webhook",
+      "webhookId": "2aea4060-7603-4974-9a61-5584a137a895"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "You are a doorbell camera. You are sent an image whenever a person is seen. Please summarize what you see on the image and who the person / people are.",
+        "options": {
+          "systemMessage": "You are a doorbell camera. You are sent an image whenever a person is seen. Please summarize what you see on the image and who the person / people are.\n\nAt the end of the message choose:\nDanger level: LOW/MEDIUM/HIGH",
+          "passthroughBinaryImages": true
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        340,
+        200
+      ],
+      "id": "489796a5-3460-4cdf-8561-51c814fbc67c",
+      "name": "AI Agent",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "model": "Drews54/llama3.2-vision-abliterated:latest",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        220,
+        380
+      ],
+      "id": "129f0827-d8e9-4a50-83a1-2f36d6ec6177",
+      "name": "Ollama Chat Model",
+      "credentials": {
+        "ollamaApi": {
+          "id": "xHuYe0MDGOs9IpBW",
+          "name": "Local Ollama service"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendPhoto",
+        "chatId": "5148182720",
+        "binaryData": true,
+        "binaryPropertyName": "image_file",
+        "additionalFields": {
+          "caption": "=PUSH NOTIFICATION VIA n8n, from OPENGATE: {{ $json.body.detected_items_json }}"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        280,
+        -60
+      ],
+      "id": "5bdc1a54-4507-476f-8ca4-4962c80e8cf8",
+      "name": "send message + image",
+      "webhookId": "300266c2-08e1-4a8a-b484-f02452c104b8",
+      "credentials": {
+        "telegramApi": {
+          "id": "BYiYakrxA7sqMcoW",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "5148182720",
+        "text": "={{ $json.output }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        740,
+        200
+      ],
+      "id": "3ca4e936-7123-483f-9664-68fe33cad203",
+      "name": "llm description",
+      "webhookId": "300266c2-08e1-4a8a-b484-f02452c104b8",
+      "credentials": {
+        "telegramApi": {
+          "id": "BYiYakrxA7sqMcoW",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "send message + image",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ollama Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "llm description",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "bda4f8e6-92fb-4bd2-80f9-aaa52f78b82d",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "558d88703fb65b2d0e44613bc35916258b0f0bf983c5d4730c00c424b77ca36a"
+  },
+  "id": "rTXkLpBdpeo5UKXh",
+  "tags": []
+}

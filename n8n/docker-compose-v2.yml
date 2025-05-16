@@ -1,0 +1,178 @@
+# Add version for clarity and feature compatibility
+version: "3.8"
+
+volumes:
+  # These are for n8n, postgres, qdrant - managed by this compose file
+  n8n_storage:
+  postgres_storage:
+  qdrant_storage:
+
+  # --- MODIFICATION FOR OLLAMA MODELS ---
+  # This tells Docker Compose to use your EXISTING Docker volume named 'ollama'.
+  # We'll give it a logical name 'existing_ollama_volume' for use within this file.
+  existing_ollama_volume:
+    name: ollama # The ACTUAL name of your Docker volume with the models
+    external: true
+
+  # --- MODIFICATION FOR OPEN WEBUI DATA ---
+  # This tells Docker Compose to use your EXISTING Docker volume named 'open-webui'.
+  # We'll give it a logical name 'existing_open_webui_volume' for use within this file.
+  existing_open_webui_volume:
+    name: open-webui # The ACTUAL name of your Docker volume with OpenWebUI accounts/settings
+    external: true
+
+networks:
+  demo:
+
+x-n8n: &service-n8n
+  image: n8nio/n8n:latest
+  networks: ["demo"]
+  environment:
+    - DB_TYPE=postgresdb
+    - DB_POSTGRESDB_HOST=postgres
+    - DB_POSTGRESDB_USER=${POSTGRES_USER}
+    - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD}
+    - N8N_DIAGNOSTICS_ENABLED=false
+    - N8N_PERSONALIZATION_ENABLED=false
+    - N8N_ENCRYPTION_KEY
+    - N8N_USER_MANAGEMENT_JWT_SECRET
+    - OLLAMA_BASE_URL=http://ollama:11434 # n8n points to the ollama service
+    - WEBHOOK_TUNNEL_URL=https://dolboeb.us/
+    - WEBHOOK_URL=https://dolboeb.us/
+  env_file:
+    - .env
+
+x-ollama: &service-ollama
+  image: ollama/ollama:latest
+  container_name: ollama # Explicit container name for clarity
+  networks: ["demo"]
+  restart: unless-stopped
+  ports:
+    - "11434:11434"
+  volumes:
+    # --- MODIFICATION FOR OLLAMA MODELS ---
+    # Mount the externally defined 'existing_ollama_volume'
+    - existing_ollama_volume:/root/.ollama
+
+x-init-ollama: &init-ollama
+  image: ollama/ollama:latest
+  networks: ["demo"]
+  volumes:
+    # --- MODIFICATION FOR OLLAMA MODELS ---
+    # Also mount the externally defined 'existing_ollama_volume' here
+    - existing_ollama_volume:/root/.ollama
+  entrypoint: /bin/sh
+  environment:
+    - OLLAMA_HOST=ollama:11434 # This init script targets the ollama service
+  command:
+    - "-c"
+    # You might want to remove or comment out the 'ollama pull' if you already have models
+    # or ensure it doesn't conflict with existing ones.
+    - "sleep 3; echo 'Ollama init script running, models should be from existing volume.'" # Example: ollama pull llama3
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    hostname: postgres
+    networks: ["demo"]
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+      - POSTGRES_DB
+    volumes:
+      - postgres_storage:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -h localhost -U ${POSTGRES_USER} -d ${POSTGRES_DB}",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  n8n-import:
+    <<: *service-n8n
+    hostname: n8n-import
+    container_name: n8n-import
+    entrypoint: /bin/sh
+    command:
+      - "-c"
+      - "n8n import:credentials --separate --input=/demo-data/credentials && n8n import:workflow --separate --input=/demo-data/workflows"
+    volumes:
+      - ./n8n/demo-data:/demo-data
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  n8n:
+    <<: *service-n8n
+    hostname: n8n
+    container_name: n8n
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    volumes:
+      - n8n_storage:/home/node/.n8n
+      - ./n8n/demo-data:/demo-data
+      - ./shared:/data/shared
+    depends_on:
+      postgres:
+        condition: service_healthy
+      n8n-import:
+        condition: service_completed_successfully
+      ollama:
+        condition: service_started
+
+  qdrant:
+    image: qdrant/qdrant
+    hostname: qdrant
+    container_name: qdrant
+    networks: ["demo"]
+    restart: unless-stopped
+    ports:
+      - "6333:6333"
+    volumes:
+      - qdrant_storage:/qdrant/storage
+
+  ollama:
+    profiles: ["gpu-nvidia", "cpu"]
+    <<: *service-ollama # This will inherit the correct volume mount from x-ollama
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  ollama-pull-llama:
+    profiles: ["gpu-nvidia", "cpu"]
+    <<: *init-ollama # This will inherit the correct volume mount from x-init-ollama
+    container_name: ollama-pull-llama-default
+    depends_on:
+      - ollama
+
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:ollama
+    container_name: open-webui
+    networks: ["demo"]
+    ports:
+      - "3000:8080"
+    volumes:
+      # --- MODIFICATION FOR OPEN WEBUI DATA ---
+      # Mount the externally defined 'existing_open_webui_volume'
+      - existing_open_webui_volume:/app/backend/data
+    environment:
+      - OLLAMA_BASE_URL=http://ollama:11434
+    restart: always
+    depends_on:
+      - ollama
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]

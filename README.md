@@ -20,9 +20,14 @@ To start all the streams, download the RUN.bash script onto the board with `wget
 
 If you want to start an individual stream, here are commands you can use:
 
-1. 30 FPS Camera Stream: `something`
-2. 5 FPS Camera Stream (for AI): `something`
-3. Audio stream: `gst-launch-1.0 -v pulsesrc volume=2.0 ! audioconvert ! audioresample ! lamemp3enc bitrate=128 cbr=true ! mpegaudioparse ! mpegtsmux ! udpsink host=${IPHOSTNAME} port=5005`
+1. 30 FPS Camera Stream: `gst-launch-1.0 -e \
+qtiqmmfsrc name=qmmf ! video/x-raw,format=NV12,width=1920,height=1080,framerate=30/1 ! \
+v4l2h264enc ! mpegtsmux ! udpsink host=${IPHOSTNAME} port=5004`
+2. 5 FPS Camera Stream (for AI): `gst-launch-1.0 -e \
+qtiqmmfsrc name=qmmf ! video/x-raw,format=NV12,width=1920,height=1080,framerate=5/1 ! v4l2h264enc ! mpegtsmux ! udpsink host=${IPHOSTNAME} port=5006`
+3. Audio stream: `gst-launch-1.0 -v pulsesrc volume=2.0 ! audioconvert ! audioresample ! lamemp3enc bitrate=128 cbr=true ! mpegaudioparse ! mpegtsmux ! udpsink host=$<RB3 IP> port=5005`
+
+If you run streams individually with those commands, only one will work at a time. Use the RUN script normally.
 
 To see the 30FPS stream, use the link `http://<RB3 IP>:8888/videostream/`
 
@@ -62,3 +67,31 @@ With correct setup, it should play audio live without delay, in good quality.
 To add face recognition, add pictures of faces of people you want to be recognized into `AI-recognition/known_faces` directory. Each file should be named with how you want the person object to be named when recognized. png and jpeg are valid formats for the pictures.
 
 ## N8N AUTOMATIONS
+
+1. Install n8n automations
+
+```bash
+git clone https://github.com/n8n-io/self-hosted-ai-starter-kit.git
+cd self-hosted-ai-starter-kit
+```
+
+2. Get our custom docker-compose that combines n8n with ollama and open-webui
+
+```bash
+wget <RAW GH LINK>
+docker-compose -f docker-compose-v2.yml --profile gpu-nvidia up -d --remove-orphans
+```
+
+3. You can find your n8n automations at localhost:5678, open-webui on localhost:3000, ollama api on localhost:11454 (ollama:11454 inside n8n)
+
+4. Add automations to n8n. Example automation in `n8n/telegram+LLM.json`, you can upload it to n8n and edit the nodes to better suit your needs.
+
+n8n allows you to do custom actions on messages or webhooks, and lots of other triggers, like send you back a picture from the camera, or make it explain what it sees on the image.
+
+![example of telegram automation](./img/photo_2025-05-16_13-08-47.jpg)
+
+## PUSH NOTIFICATIONS
+
+Easiest thing to use for push notifications is ntfy.sh.
+
+Install the app on your phone from app store (works both on android and iphone), add a new notification source, and adjust the bucket it sends notifications to in the recognition program config.
