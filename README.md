@@ -54,6 +54,28 @@ You can find audio sources on host with `pactl list short sources`, should look 
 
 With correct setup, it should play audio live without delay, in good quality.
 
+## GPIO (RING BUTTON PUSH NOTIFICATION)
+
+- scp Dockerfile and monitor_button.py from ./gpio/ into any directory on RB3
+- Run the gpio button monitoring
+
+```bash
+docker build -t rb3-gpio-monitor .
+
+docker run --rm -it \
+ --device=/dev/gpiochip0 \
+ --device=/dev/gpiochip1 \
+ --device=/dev/gpiochip2 \
+ --device=/dev/gpiochip3 \
+ --device=/dev/gpiochip4 \
+ --device=/dev/gpiochip5 \
+ -e GPIO_CHIP_DEVICE="/dev/gpiochip4" \
+ -e GPIO_LINE_OFFSET="36" \
+ rb3-gpio-monitor
+```
+
+Notifications will come to ntfy.sh by default.
+
 ## YOLO OBJECT DETECTION
 
 1. Clone the repo,
