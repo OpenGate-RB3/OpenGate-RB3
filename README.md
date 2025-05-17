@@ -85,6 +85,17 @@ Notifications will come to ntfy.sh by default.
 4. download YOLO pt file from YOLO website of appropriate model size,
 5. run `python yolo7-face.py`
 
+To run YOLO on RB3,
+
+- Copy contents of ./AI-recognition/RB3-docker/ to the board
+- Run the Docker
+
+```bash
+docker build -t yolo-object-detector .
+docker run --rm yolo-object-detector
+
+```
+
 ## FACE RECOGNITION
 
 To add face recognition, add pictures of faces of people you want to be recognized into `AI-recognition/known_faces` directory. Each file should be named with how you want the person object to be named when recognized. png and jpeg are valid formats for the pictures.
