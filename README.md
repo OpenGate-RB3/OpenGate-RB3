@@ -96,6 +96,15 @@ docker run --rm yolo-object-detector
 
 ```
 
+## YOLO OBJECT DETECTION NATIVE
+
+1. wget either [yolo-pipeline](https://github.com/OpenGate-RB3/Object-Detection/blob/main/detection.py) or [yolo-pipeline-with-overlay](https://github.com/OpenGate-RB3/Object-Detection/blob/main/detection_with_overlay.py)
+2. Download the MQTT Python bindings [pyMQTT](https://github.com/OpenGate-RB3/Open-Gate-MQTT-Client/releases/download/1.0.0/openGateMqttPython.cpython-312-aarch64-linux-gnu.so) , place into `/opt/openGateExtensions/`
+3. Download YOLOV8 TFLITE model from Qualcomm AI-Hub or [quic/ai-hub](https://github.com/quic/ai-hub-models/tree/main) GitHub repo. Preferred method is to use Qualcomm AI-hub as those come pre-quantized and pre-exported, move the model onto the board at `/etc/models/yolov8_det.tflite`
+4. Download the [coco_labels.txt](https://github.com/quic/ai-hub-models/blob/main/qai_hub_models/labels/coco_labels.txt) file. Place into `/etc/labels/coco_labels.txt`
+5. Instead of running the start-video script, run the Python script using `python3 < detection script here>.py`
+6. If an MQTT config is present, i.e., the file `/etc/config/mqtt.txt` is present with a valid URL to an MQTT broker, MQTT messages containing detections and their confidence will be sent. Message format is `[(label (str), confidence (double)), ...]`
+
 ## FACE RECOGNITION
 
 To add face recognition, add pictures of faces of people you want to be recognized into `AI-recognition/known_faces` directory. Each file should be named with how you want the person object to be named when recognized. png and jpeg are valid formats for the pictures.
