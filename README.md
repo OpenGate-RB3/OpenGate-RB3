@@ -54,6 +54,10 @@ You can find audio sources on host with `pactl list short sources`, should look 
 
 With correct setup, it should play audio live without delay, in good quality.
 
+![audio](https://github.com/OpenGate-RB3/OpenGate-RB3/blob/main/diagrams/CI_CD%20Diagram%20-%20AudioStream.jpg)
+![video-ai](https://github.com/OpenGate-RB3/OpenGate-RB3/blob/main/diagrams/CI_CD%20Diagram%20-%20Non-overlay.jpg)
+![video-ai-overlay](https://github.com/OpenGate-RB3/OpenGate-RB3/blob/main/diagrams/CI_CD%20Diagram%20-%20OVERLAY.jpg)
+
 ## GPIO (RING BUTTON PUSH NOTIFICATION)
 
 - Connect a button to ground (pin 1 or 2), and GPIO pin (23 in default case)
