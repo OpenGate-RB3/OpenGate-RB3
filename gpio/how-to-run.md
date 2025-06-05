@@ -9,4 +9,5 @@ docker run --rm -it \
  --device=/dev/gpiochip5 \
  -e GPIO_CHIP_DEVICE="/dev/gpiochip4" \
  -e GPIO_LINE_OFFSET="36" \
+ --network host \
  rb3-gpio-monitor
